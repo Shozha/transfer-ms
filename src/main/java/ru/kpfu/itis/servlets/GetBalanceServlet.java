@@ -14,7 +14,7 @@ import java.util.Map;
 
 import static ru.kpfu.itis.util.JsonParser.writeResponseBody;
 
-@WebServlet("/transfer-balance")
+@WebServlet("/api/transactions/balance")
 public class GetBalanceServlet extends HttpServlet {
 
     private ContractRepository contractRepository;
