@@ -31,7 +31,6 @@ public class TransactionCreateServlet extends HttpServlet {
         try {
             TransactionRequest request = JsonParser.readRequestBody(req, TransactionRequest.class);
 
-            // Валидация
             if (!isValidRequest(request)) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 JsonParser.writeResponseBody(new ErrorResponse("Invalid request data"), resp);
