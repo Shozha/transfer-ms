@@ -38,7 +38,6 @@ public class CreateContractServlet extends HttpServlet {
         JsonParser.writeResponseBody(savedContract, resp);
 
         String operation = resp.getHeader("operation-id");
-
         resp.addHeader(operation, "success");
     }
 

@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import static ru.kpfu.itis.util.JsonParser.readRequestBody;
 import static ru.kpfu.itis.util.JsonParser.writeResponseBody;
 
 @WebServlet("/transfer-balance")
@@ -32,8 +31,8 @@ public class GetBalanceServlet extends HttpServlet {
         );
 
         writeResponseBody(response, resp);
-        String operation = resp.getHeader("operation-id");
 
+        String operation = resp.getHeader("operation-id");
         resp.addHeader(operation, "success");
     }
 
