@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 
-@WebServlet("/transfer-contract")
+@WebServlet("/api/transactions/contract")
 public class CreateContractServlet extends HttpServlet {
 
     private ContractRepository contractRepository;
