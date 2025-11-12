@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @WebServlet("/api/transactions/create")
@@ -31,12 +30,6 @@ public class TransactionCreateServlet extends HttpServlet {
         try {
             TransactionRequest request = JsonParser.readRequestBody(req, TransactionRequest.class);
 
-            if (!isValidRequest(request)) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                JsonParser.writeResponseBody(new ErrorResponse("Invalid request data"), resp);
-                return;
-            }
-
             Transaction transaction = transactionService.create(
                     UUID.fromString(request.getSourceContractId()),
                     UUID.fromString(request.getTargetContractId()),
@@ -50,29 +43,10 @@ public class TransactionCreateServlet extends HttpServlet {
 
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonParser.writeResponseBody(new ErrorResponse("Invalid UUID format"), resp);
+            JsonParser.writeResponseBody(new ErrorResponse(e.getMessage()), resp);
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             JsonParser.writeResponseBody(new ErrorResponse("Failed to create transaction"), resp);
-        }
-    }
-
-    private boolean isValidRequest(TransactionRequest request) {
-        return request != null &&
-                request.getSourceContractId() != null &&
-                isValidUuid(request.getSourceContractId()) &&
-                request.getTargetContractId() != null &&
-                isValidUuid(request.getTargetContractId()) &&
-                request.getAmount() != null &&
-                request.getAmount().compareTo(BigDecimal.ZERO) > 0;
-    }
-
-    private boolean isValidUuid(String uuid) {
-        try {
-            UUID.fromString(uuid);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
         }
     }
 }

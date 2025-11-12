@@ -17,12 +17,18 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction create(UUID sourceContractId, UUID targetContractId, BigDecimal amount, String description) {
+        validateCreateRequest(sourceContractId, targetContractId, amount);
+
+        if (sourceContractId.equals(targetContractId)) {
+            throw new IllegalArgumentException("Source and target contracts cannot be the same");
+        }
+
         Transaction transaction = Transaction.builder()
                 .id(UUID.randomUUID())
                 .sourceContractId(sourceContractId)
                 .targetContractId(targetContractId)
                 .amount(amount)
-                .description(description)
+                .description(description != null ? description.trim() : "")
                 .createdAt(Instant.now())
                 .build();
 
@@ -41,11 +47,29 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<Transaction> getTransactionsByContractName(String contractName) {
-        return transactionRepository.getTransactionsByContractName(contractName);
+        if (contractName == null || contractName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Contract name cannot be empty");
+        }
+        return transactionRepository.getTransactionsByContractName(contractName.trim());
     }
 
     @Override
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
+    }
+
+    private void validateCreateRequest(UUID sourceContractId, UUID targetContractId, BigDecimal amount) {
+        if (sourceContractId == null) {
+            throw new IllegalArgumentException("Source contract ID cannot be null");
+        }
+        if (targetContractId == null) {
+            throw new IllegalArgumentException("Target contract ID cannot be null");
+        }
+        if (amount == null) {
+            throw new IllegalArgumentException("Amount cannot be null");
+        }
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
     }
 }
