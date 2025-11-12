@@ -8,7 +8,6 @@ import ru.kpfu.itis.model.Contract;
 import ru.kpfu.itis.repository.ContractRepository;
 
 import java.math.BigDecimal;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -20,8 +19,19 @@ public class ContractRepositoryImpl implements ContractRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final ContractRowMapper rowMapper = new ContractRowMapper();
+    private final String SQL_SELECT_BY_ID = "SELECT * FROM contracts WHERE id = ?";
     private final String SQL_SELECT_BY_CONTRACT_NAME = "SELECT * FROM contracts WHERE contract_name = ?";
-    private final String SQL_INSERT =  "INSERT INTO contracts(\"contract_name\", \"created_date\", \"balance\") VALUES (?, ? , ?)";
+    private final String SQL_INSERT =  "INSERT INTO contracts(\"id\",\"contract_name\", \"created_date\", \"balance\") VALUES (?, ?, ?, ?)";
+    private final String SQL_UPDATE = "UPDATE contracts SET balance = ? WHERE id = ?";
+
+    @Override
+    public Optional<Contract> findById(UUID id) {
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(SQL_SELECT_BY_ID, rowMapper, id.toString()));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
 
     @Override
     public Optional<Contract> findByContractName(String name) {
@@ -49,12 +59,15 @@ public class ContractRepositoryImpl implements ContractRepository {
 
     @Override
     public Contract update(Contract contract) {
-        return null;
+        jdbcTemplate.update(SQL_UPDATE, contract.getBalance(), contract.getId().toString());
+        return contract;
     }
 
     @Override
     public BigDecimal getBalanceByContractName(String name) {
-        return Optional.ofNullable(findByContractName(name).get().getBalance()).orElse(BigDecimal.ZERO);
+        return findByContractName(name)
+                .map(Contract::getBalance)
+                .orElse(BigDecimal.ZERO);
     }
 
     private static final class ContractRowMapper implements RowMapper<Contract> {

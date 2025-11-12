@@ -25,9 +25,8 @@ public class ProjectStartupListener implements ServletContextListener {
 
         TransactionRepository transactionRepository = new TransactionRepositoryImpl(DataBaseConfig.jdbcTemplate);
 
-        TransactionService transactionService = new TransactionServiceImpl(transactionRepository);
+        TransactionService transactionService = new TransactionServiceImpl(transactionRepository, contractRepository);
 
         context.setAttribute("transactionService", transactionService);
-        context.setAttribute("transactionRepository", transactionRepository);
     }
 }

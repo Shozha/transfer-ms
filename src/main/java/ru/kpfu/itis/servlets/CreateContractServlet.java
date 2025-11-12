@@ -1,5 +1,6 @@
 package ru.kpfu.itis.servlets;
 
+import ru.kpfu.itis.dto.response.ContractResponse;
 import ru.kpfu.itis.model.Contract;
 import ru.kpfu.itis.repository.ContractRepository;
 import ru.kpfu.itis.util.JsonParser;
@@ -33,12 +34,10 @@ public class CreateContractServlet extends HttpServlet {
                 .build();
 
         Contract savedContract = contractRepository.save(contract);
+        ContractResponse response = ContractResponse.fromContract(savedContract);
 
         resp.setStatus(HttpServletResponse.SC_CREATED);
-        JsonParser.writeResponseBody(savedContract, resp);
-
-        String operation = resp.getHeader("operation-id");
-        resp.addHeader(operation, "success");
+        JsonParser.writeResponseBody(response, resp);
     }
 
     @Override

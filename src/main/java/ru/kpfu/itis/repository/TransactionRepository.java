@@ -10,6 +10,6 @@ public interface TransactionRepository {
     Transaction save(Transaction transaction);
     Optional<Transaction> findById(UUID id);
     List<Transaction> findByContractId(UUID contractId);
+    List<Transaction> findByContractName(String contractName);
     List<Transaction> findAll();
-    List<Transaction> getTransactionsByContractName(String contractName);
 }

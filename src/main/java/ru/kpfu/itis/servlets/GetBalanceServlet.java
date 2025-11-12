@@ -32,12 +32,12 @@ public class GetBalanceServlet extends HttpServlet {
 
         writeResponseBody(response, resp);
 
-        String operation = resp.getHeader("operation-id");
+        String operation = req.getHeader("operation-id");
         resp.addHeader(operation, "success");
     }
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        contractRepository = (ContractRepository) getServletContext().getAttribute("contractRepository");
+        contractRepository = (ContractRepository) config.getServletContext().getAttribute("contractRepository");
     }
 }
