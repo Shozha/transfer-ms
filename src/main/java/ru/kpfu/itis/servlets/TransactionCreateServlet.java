@@ -7,6 +7,7 @@ import ru.kpfu.itis.model.Transaction;
 import ru.kpfu.itis.service.TransactionService;
 import ru.kpfu.itis.util.JsonParser;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,8 +22,8 @@ public class TransactionCreateServlet extends HttpServlet {
     private TransactionService transactionService;
 
     @Override
-    public void init() throws ServletException {
-        transactionService = (TransactionService) getServletContext().getAttribute("transactionService");
+    public void init(ServletConfig config) throws ServletException {
+        transactionService = (TransactionService) config.getServletContext().getAttribute("transactionService");
     }
 
     @Override
@@ -40,6 +41,9 @@ public class TransactionCreateServlet extends HttpServlet {
             TransactionResponse response = TransactionResponse.fromTransaction(transaction);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             JsonParser.writeResponseBody(response, resp);
+
+            String operation = req.getHeader("operation-id");
+            resp.addHeader(operation, "success");
 
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);

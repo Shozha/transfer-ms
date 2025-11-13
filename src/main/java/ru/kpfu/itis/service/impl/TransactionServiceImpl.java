@@ -1,7 +1,9 @@
 package ru.kpfu.itis.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import ru.kpfu.itis.model.Contract;
 import ru.kpfu.itis.model.Transaction;
+import ru.kpfu.itis.repository.ContractRepository;
 import ru.kpfu.itis.repository.TransactionRepository;
 import ru.kpfu.itis.service.TransactionService;
 
@@ -14,6 +16,7 @@ import java.util.UUID;
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final ContractRepository contractRepository;
 
     @Override
     public Transaction create(UUID sourceContractId, UUID targetContractId, BigDecimal amount, String description) {
@@ -25,8 +28,8 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction transaction = Transaction.builder()
                 .id(UUID.randomUUID())
-                .sourceContractId(sourceContractId)
-                .targetContractId(targetContractId)
+                .sourceContractId(fromContractId)
+                .targetContractId(toContractId)
                 .amount(amount)
                 .description(description != null ? description.trim() : "")
                 .createdAt(Instant.now())
@@ -41,8 +44,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public List<Transaction> getTransactionsByContractId(UUID sourceContractId) {
-        return transactionRepository.findByContractId(sourceContractId);
+    public List<Transaction> getTransactionsByContractId(UUID contractId) {
+        return transactionRepository.findByContractId(contractId);
     }
 
     @Override

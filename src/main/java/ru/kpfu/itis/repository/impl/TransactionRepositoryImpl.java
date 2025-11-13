@@ -17,23 +17,18 @@ import java.util.UUID;
 public class TransactionRepositoryImpl implements TransactionRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    private final RowMapper<Transaction> rowMapper = new TransactionRowMapper();
+    private final TransactionRowMapper rowMapper = new TransactionRowMapper();
 
-    private static final String SQL_INSERT =
-            "INSERT INTO transactions (id, source_contract_id, target_contract_id, amount, description, created_at) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
-
-    private static final String SQL_SELECT_BY_ID =
+    private final String SQL_INSERT =
+            "INSERT INTO transactions(id, source_contract_id, target_contract_id, amount, description, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+    private final String SQL_SELECT_BY_ID =
             "SELECT * FROM transactions WHERE id = ?";
-
-    private static final String SQL_SELECT_BY_CONTRACT_ID =
-            "SELECT * FROM transactions WHERE source_contract_id = ? OR target_contract_id = ? ORDER BY created_at DESC";
-
-    private static final String SQL_SELECT_ALL =
-            "SELECT * FROM transactions ORDER BY created_at DESC";
-
-    private static final String SQL_SELECT_CONTRACT_ID_BY_NAME =
-            "SELECT id FROM contracts WHERE contract_name = ?";
+    private final String SQL_SELECT_BY_CONTRACT_ID =
+            "SELECT * FROM transactions WHERE source_contract_id = ? OR target_contract_id = ?";
+    private final String SQL_SELECT_BY_CONTRACT_NAME =
+            "SELECT t.* FROM transactions t JOIN contracts c ON t.source_contract_id = c.id OR t.target_contract_id = c.id WHERE c.contract_name = ?";
+    private final String SQL_SELECT_ALL =
+            "SELECT * FROM transactions";
 
     @Override
     public Transaction save(Transaction transaction) {
@@ -50,9 +45,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     @Override
     public Optional<Transaction> findById(UUID id) {
         try {
-            return Optional.ofNullable(
-                    jdbcTemplate.queryForObject(SQL_SELECT_BY_ID, rowMapper, id.toString())
-            );
+            return Optional.ofNullable(jdbcTemplate.queryForObject(SQL_SELECT_BY_ID, rowMapper, id.toString()));
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -60,8 +53,12 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
     @Override
     public List<Transaction> findByContractId(UUID contractId) {
-        String contractIdStr = contractId.toString();
-        return jdbcTemplate.query(SQL_SELECT_BY_CONTRACT_ID, rowMapper, contractIdStr, contractIdStr);
+        return jdbcTemplate.query(SQL_SELECT_BY_CONTRACT_ID, rowMapper, contractId.toString(), contractId.toString());
+    }
+
+    @Override
+    public List<Transaction> findByContractName(String contractName) {
+        return jdbcTemplate.query(SQL_SELECT_BY_CONTRACT_NAME, rowMapper, contractName);
     }
 
     @Override
@@ -69,21 +66,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return jdbcTemplate.query(SQL_SELECT_ALL, rowMapper);
     }
 
-    @Override
-    public List<Transaction> getTransactionsByContractName(String contractName) {
-        try {
-            String contractId = jdbcTemplate.queryForObject(
-                    SQL_SELECT_CONTRACT_ID_BY_NAME,
-                    String.class,
-                    contractName
-            );
-            return findByContractId(UUID.fromString(contractId));
-        } catch (Exception e) {
-            return List.of();
-        }
-    }
-
-    private static class TransactionRowMapper implements RowMapper<Transaction> {
+    private static final class TransactionRowMapper implements RowMapper<Transaction> {
         @Override
         public Transaction mapRow(ResultSet rs, int rowNum) throws SQLException {
             return Transaction.builder()
@@ -91,7 +74,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                     .sourceContractId(UUID.fromString(rs.getString("source_contract_id")))
                     .targetContractId(UUID.fromString(rs.getString("target_contract_id")))
                     .amount(rs.getBigDecimal("amount"))
-                    .description(rs.getString("description"))  // ← добавил маппинг
+                    .description(rs.getString("description"))
                     .createdAt(rs.getTimestamp("created_at").toInstant())
                     .build();
         }
