@@ -14,7 +14,6 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
-
     private final TransactionRepository transactionRepository;
     private final ContractRepository contractRepository;
 
@@ -26,16 +25,34 @@ public class TransactionServiceImpl implements TransactionService {
             throw new IllegalArgumentException("Source and target contracts cannot be the same");
         }
 
+        Contract sourceContract = contractRepository.findById(sourceContractId)
+                .orElseThrow(() -> new IllegalArgumentException("Source contract not found: " + sourceContractId));
+
+        Contract targetContract = contractRepository.findById(targetContractId)
+                .orElseThrow(() -> new IllegalArgumentException("Target contract not found: " + targetContractId));
+
+        if (sourceContract.getBalance().compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Insufficient balance. Available: " + sourceContract.getBalance() + ", Required: " + amount);
+        }
+
         Transaction transaction = Transaction.builder()
                 .id(UUID.randomUUID())
-                .sourceContractId(fromContractId)
-                .targetContractId(toContractId)
+                .sourceContractId(sourceContractId)
+                .targetContractId(targetContractId)
                 .amount(amount)
                 .description(description != null ? description.trim() : "")
                 .createdAt(Instant.now())
                 .build();
 
-        return transactionRepository.save(transaction);
+        transactionRepository.save(transaction);
+
+        sourceContract.setBalance(sourceContract.getBalance().subtract(amount));
+        targetContract.setBalance(targetContract.getBalance().add(amount));
+
+        contractRepository.update(sourceContract);
+        contractRepository.update(targetContract);
+
+        return transaction;
     }
 
     @Override
@@ -53,7 +70,7 @@ public class TransactionServiceImpl implements TransactionService {
         if (contractName == null || contractName.trim().isEmpty()) {
             throw new IllegalArgumentException("Contract name cannot be empty");
         }
-        return transactionRepository.getTransactionsByContractName(contractName.trim());
+        return transactionRepository.findByContractName(contractName.trim());
     }
 
     @Override

@@ -18,7 +18,6 @@ import java.util.UUID;
 
 @WebServlet("/api/transactions/create")
 public class TransactionCreateServlet extends HttpServlet {
-
     private TransactionService transactionService;
 
     @Override
@@ -43,13 +42,17 @@ public class TransactionCreateServlet extends HttpServlet {
             JsonParser.writeResponseBody(response, resp);
 
             String operation = req.getHeader("operation-id");
-            resp.addHeader(operation, "success");
-
+            if (operation != null) {
+                resp.addHeader(operation, "success");
+            }
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            System.err.println("Validation error: " + e.getMessage());
             JsonParser.writeResponseBody(new ErrorResponse(e.getMessage()), resp);
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            System.err.println("Failed to create transaction: " + e.getMessage());
+            e.printStackTrace();
             JsonParser.writeResponseBody(new ErrorResponse("Failed to create transaction"), resp);
         }
     }

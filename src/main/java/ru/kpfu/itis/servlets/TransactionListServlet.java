@@ -2,7 +2,6 @@ package ru.kpfu.itis.servlets;
 
 import ru.kpfu.itis.dto.response.ErrorResponse;
 import ru.kpfu.itis.dto.response.TransactionResponse;
-import ru.kpfu.itis.model.Transaction;
 import ru.kpfu.itis.service.TransactionService;
 import ru.kpfu.itis.util.JsonParser;
 
