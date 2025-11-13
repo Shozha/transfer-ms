@@ -14,12 +14,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @WebServlet("/api/transactions/create")
 public class TransactionCreateServlet extends HttpServlet {
-
     private TransactionService transactionService;
 
     @Override
@@ -31,12 +29,6 @@ public class TransactionCreateServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             TransactionRequest request = JsonParser.readRequestBody(req, TransactionRequest.class);
-
-            if (!isValidRequest(request)) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                JsonParser.writeResponseBody(new ErrorResponse("Invalid request data"), resp);
-                return;
-            }
 
             Transaction transaction = transactionService.create(
                     UUID.fromString(request.getSourceContractId()),
@@ -50,33 +42,18 @@ public class TransactionCreateServlet extends HttpServlet {
             JsonParser.writeResponseBody(response, resp);
 
             String operation = req.getHeader("operation-id");
-            resp.addHeader(operation, "success");
-
+            if (operation != null) {
+                resp.addHeader(operation, "success");
+            }
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonParser.writeResponseBody(new ErrorResponse("Invalid UUID format"), resp);
+            System.err.println("Validation error: " + e.getMessage());
+            JsonParser.writeResponseBody(new ErrorResponse(e.getMessage()), resp);
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            System.err.println("Failed to create transaction: " + e.getMessage());
+            e.printStackTrace();
             JsonParser.writeResponseBody(new ErrorResponse("Failed to create transaction"), resp);
-        }
-    }
-
-    private boolean isValidRequest(TransactionRequest request) {
-        return request != null &&
-                request.getSourceContractId() != null &&
-                isValidUuid(request.getSourceContractId()) &&
-                request.getTargetContractId() != null &&
-                isValidUuid(request.getTargetContractId()) &&
-                request.getAmount() != null &&
-                request.getAmount().compareTo(BigDecimal.ZERO) > 0;
-    }
-
-    private boolean isValidUuid(String uuid) {
-        try {
-            UUID.fromString(uuid);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
         }
     }
 }

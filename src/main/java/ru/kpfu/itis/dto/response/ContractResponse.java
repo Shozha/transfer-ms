@@ -1,3 +1,4 @@
+
 package ru.kpfu.itis.dto.response;
 
 import lombok.AllArgsConstructor;
@@ -27,5 +28,4 @@ public class ContractResponse {
                 .balance(contract.getBalance())
                 .build();
     }
-
 }

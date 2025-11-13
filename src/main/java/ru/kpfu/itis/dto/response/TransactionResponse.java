@@ -1,5 +1,6 @@
 package ru.kpfu.itis.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,12 +18,15 @@ public class TransactionResponse {
     private String targetContractId;
     private BigDecimal amount;
     private String description;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ", timezone = "UTC")
     private Instant createdAt;
 
     public static TransactionResponse fromTransaction(Transaction transaction) {
         if (transaction == null) {
             return null;
         }
+
         return new TransactionResponse(
                 transaction.getId().toString(),
                 transaction.getSourceContractId().toString(),
