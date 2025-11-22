@@ -1,6 +1,7 @@
 
 package ru.kpfu.itis.servlets;
 
+import ru.kpfu.itis.dto.response.ApiResponse;
 import ru.kpfu.itis.repository.ContractRepository;
 
 import javax.servlet.ServletConfig;
@@ -22,19 +23,38 @@ public class GetBalanceServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String contractName = req.getParameter("contractName");
+        try {
+            String contractName = req.getParameter("contractName");
 
-        BigDecimal balance = contractRepository.getBalanceByContractName(contractName);
+            if (contractName == null || contractName.trim().isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                ApiResponse<Object> errorResponse = new ApiResponse<>("contractName parameter is required", null);
+                writeResponseBody(errorResponse, resp);
+                return;
+            }
 
-        Map<String, Object> response = Map.of(
-                "contractName", contractName,
-                "balance", balance
-        );
+            BigDecimal balance = contractRepository.getBalanceByContractName(contractName);
 
-        writeResponseBody(response, resp);
+            if (balance == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                ApiResponse<Object> errorResponse = new ApiResponse<>("contract not found", null);
+                writeResponseBody(errorResponse, resp);
+                return;
+            }
 
-        String operation = req.getHeader("operation-id");
-        resp.addHeader(operation, "success");
+            Map<String, Object> data = Map.of(
+                    "contractName", contractName,
+                    "balance", balance
+            );
+
+            ApiResponse<Map<String, Object>> response = new ApiResponse<>("success", data);
+            writeResponseBody(response, resp);
+
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            ApiResponse<Object> errorResponse = new ApiResponse<>("Internal server error", null);
+            writeResponseBody(errorResponse, resp);
+        }
     }
 
     @Override

@@ -15,7 +15,7 @@ public class DataBaseConfig {
         PGSimpleDataSource dataSource = new PGSimpleDataSource();
         dataSource.setUrl("jdbc:postgresql://localhost:5432/transfer-db");
         dataSource.setUser("postgres");
-        dataSource.setPassword("qwerty007");
+        dataSource.setPassword("qwerty");
         return dataSource;
     }
 

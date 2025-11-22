@@ -1,6 +1,6 @@
 package ru.kpfu.itis.servlets;
 
-import ru.kpfu.itis.dto.response.ErrorResponse;
+import ru.kpfu.itis.dto.response.ApiResponse;
 import ru.kpfu.itis.dto.response.TransactionResponse;
 import ru.kpfu.itis.service.TransactionService;
 import ru.kpfu.itis.util.JsonParser;
@@ -44,14 +44,17 @@ public class TransactionListServlet extends HttpServlet {
                         .collect(Collectors.toList());
             }
 
-            JsonParser.writeResponseBody(response, resp);
+            ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>("success", response);
+            JsonParser.writeResponseBody(apiResponse, resp);
 
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonParser.writeResponseBody(new ErrorResponse(e.getMessage()), resp);
+            ApiResponse<Object> errorResponse = new ApiResponse<>(e.getMessage(), null);
+            JsonParser.writeResponseBody(errorResponse, resp);
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JsonParser.writeResponseBody(new ErrorResponse("Internal server error"), resp);
+            ApiResponse<Object> errorResponse = new ApiResponse<>("Internal server error", null);
+            JsonParser.writeResponseBody(errorResponse, resp);
         }
     }
 }

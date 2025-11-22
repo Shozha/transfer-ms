@@ -1,7 +1,7 @@
 package ru.kpfu.itis.servlets;
 
 import ru.kpfu.itis.dto.request.TransactionRequest;
-import ru.kpfu.itis.dto.response.ErrorResponse;
+import ru.kpfu.itis.dto.response.ApiResponse;
 import ru.kpfu.itis.dto.response.TransactionResponse;
 import ru.kpfu.itis.model.Transaction;
 import ru.kpfu.itis.service.TransactionService;
@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @WebServlet("/api/transactions/create")
@@ -30,6 +31,28 @@ public class TransactionCreateServlet extends HttpServlet {
         try {
             TransactionRequest request = JsonParser.readRequestBody(req, TransactionRequest.class);
 
+            if (request == null ||
+                    request.getSourceContractId() == null ||
+                    request.getTargetContractId() == null ||
+                    request.getAmount() == null ||
+                    request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                ApiResponse<Object> errorResponse = new ApiResponse<>("Invalid request data", null);
+                JsonParser.writeResponseBody(errorResponse, resp);
+                return;
+            }
+
+            try {
+                UUID.fromString(request.getSourceContractId());
+                UUID.fromString(request.getTargetContractId());
+            } catch (IllegalArgumentException e) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                ApiResponse<Object> errorResponse = new ApiResponse<>("Invalid UUID format", null);
+                JsonParser.writeResponseBody(errorResponse, resp);
+                return;
+            }
+
             Transaction transaction = transactionService.create(
                     UUID.fromString(request.getSourceContractId()),
                     UUID.fromString(request.getTargetContractId()),
@@ -38,22 +61,19 @@ public class TransactionCreateServlet extends HttpServlet {
             );
 
             TransactionResponse response = TransactionResponse.fromTransaction(transaction);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            JsonParser.writeResponseBody(response, resp);
+            ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>("success", response);
 
-            String operation = req.getHeader("operation-id");
-            if (operation != null) {
-                resp.addHeader(operation, "success");
-            }
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            JsonParser.writeResponseBody(apiResponse, resp);
+
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            System.err.println("Validation error: " + e.getMessage());
-            JsonParser.writeResponseBody(new ErrorResponse(e.getMessage()), resp);
+            ApiResponse<Object> errorResponse = new ApiResponse<>(e.getMessage(), null);
+            JsonParser.writeResponseBody(errorResponse, resp);
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            System.err.println("Failed to create transaction: " + e.getMessage());
-            e.printStackTrace();
-            JsonParser.writeResponseBody(new ErrorResponse("Failed to create transaction"), resp);
+            ApiResponse<Object> errorResponse = new ApiResponse<>("Failed to create transaction", null);
+            JsonParser.writeResponseBody(errorResponse, resp);
         }
     }
 }
