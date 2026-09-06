@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  transfers-service:
+    image: shozha/transfers-service:1.0
+    container_name: transfers-service
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8083:8080"
+
+  db:
+    image: postgres:latest
+    container_name: transfers-db
+    environment:
+      POSTGRES_DB: transfer-db
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - transfers-db-data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  transfers-db-data:
