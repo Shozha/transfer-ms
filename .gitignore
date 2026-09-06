@@ -1,0 +1,52 @@
+##############################
+## IntelliJ IDEA
+##############################
+# Проектные файлы IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.idea_modules/
+
+##############################
+## Java
+##############################
+.mtj.tmp/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+##############################
+## Gradle
+##############################
+.gradle
+build/
+**/build/
+gradle-app.setting
+.gradletasknamecache
+*.hprof
+
+!gradle/wrapper/gradle-wrapper.jar
+!gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+
+##какая-то хрень от Minio
+data/*
+
+##############################
+## OS-хлам
+##############################
+# macOS
+.DS_Store
+
+##############################
+## Секреты
+##############################
+.env
